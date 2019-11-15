@@ -15,7 +15,7 @@ namespace git\commands;
 class BuildCommit
 {
     const COMMIT_FILE = __DIR__ . '/../hooks/pre-commit';
-    const GIT_HOOKS_COMMIT_FILE = __DIR__ . '/../../.git/hooks/pre-commit';
+    const GIT_HOOKS_COMMIT_FILE = __DIR__ . '/../../../../.git/hooks/pre-commit';
 
     public static function copyCommitFile()
     {
