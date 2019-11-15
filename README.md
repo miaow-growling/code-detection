@@ -27,4 +27,7 @@ composer require miaow-growling/code-detection --prefer-dist
 composer install --prefer-dist
 ```
 
+### 安装git钩子（自动安装待验证）
+> 将hooks目录中的文件复制到项目的.git/hooks中
+
 ### PSR2常见问题处理方式见PHPCS.md
