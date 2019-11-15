@@ -1,0 +1,85 @@
+#!/bin/bash
+# PHP语法和PSR2规范检测
+
+# 获取最新版本号
+if git rev-parse --verify HEAD
+then
+    against=HEAD
+else
+    # 指定一个版本号
+    against=4b825dc642cb6eb9a060e54bf8d69288fbee4904
+fi
+
+# 获取有改动的文件集合
+FILES=$(git diff-index --name-only --cached --diff-filter=ACMR $against -- )
+
+if [ "$FILES" == "" ]; then
+    echo '没有文件修改'
+    exit 0
+fi
+
+echo '开始校验语法'
+
+PHPLINT_BIN=./vendor/bin/phplint
+PHPLINT_EXCLUDE='./vendor'
+
+# 检测是否安装PHPLINT
+if [ ! -x $PHPLINT_BIN ]; then
+    echo "PHPLINT 可执行文件未找到 -> $PHPLINT_BIN"
+    exit 1
+fi
+
+LINT_CHECK_FILE=''
+for LINT_FILE in $FILES
+do
+  LINT_CHECK_FILE="$LINT_CHECK_FILE $LINT_FILE"
+done
+
+LINT_OUTPUT=$($PHPLINT_BIN $LINT_CHECK_FILE --exclude=$PHPLINT_EXCLUDE --no-cache)
+LINT_RETVAL=$?
+
+if [ $LINT_RETVAL -ne 0 ]; then
+    echo "$LINT_OUTPUT" | less
+fi
+
+echo '开始校验PSR2规则'
+
+PHPCS_BIN=./vendor/bin/phpcs
+PHPCS_CODING_STANDARD=PSR2
+PHPCS_IGNORE='./vendor'
+
+# 检测是否安装PHPCS
+if [ ! -x $PHPCS_BIN ]; then
+    echo "PHPCS 可执行文件未找到 -> $PHPCS_BIN"
+    exit 1
+fi
+
+# 将修改的文件整合
+FILES_TO_CHECK=""
+for FILE in $FILES
+do
+    FILES_TO_CHECK="$FILES_TO_CHECK $FILE"
+done
+
+if [ "$FILES_TO_CHECK" == "" ]; then
+    exit 0
+fi
+
+# 配置参数
+if [ "$PHPCS_IGNORE" != "" ]; then
+    IGNORE="--ignore=$PHPCS_IGNORE"
+else
+    IGNORE=""
+fi
+
+# 执行检测
+OUTPUT=$($PHPCS_BIN -s --standard=$PHPCS_CODING_STANDARD $IGNORE $FILES_TO_CHECK)
+RETVAL=$?
+
+if [ $RETVAL -ne 0 ]; then
+    echo "$OUTPUT" | less
+else
+    echo "检测完毕"
+fi
+
+exit $RETVAL
